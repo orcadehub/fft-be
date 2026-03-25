@@ -225,4 +225,37 @@ router.delete('/tournaments/:id', adminAuth, async (req, res) => {
   }
 });
 
+// Get ALL users for admin
+router.get('/users', adminAuth, async (req, res) => {
+  try {
+    const users = await User.find().select('-password').sort({ createdAt: -1 });
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: 'Server error when fetching users' });
+  }
+});
+
+// Update User Password (Admin)
+router.put('/users/:id/password', adminAuth, async (req, res) => {
+  try {
+    const { password } = req.body;
+    if (!password) {
+      return res.status(400).json({ error: 'Password is required' });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    user.password = password; // The pre-save hook in User model will hash this
+    await user.save();
+
+    res.json({ message: 'Password updated successfully' });
+  } catch (err) {
+    console.error('[Admin] Password Update Error:', err);
+    res.status(500).json({ error: 'Server error when updating password' });
+  }
+});
+
 module.exports = router;
