@@ -13,15 +13,27 @@ const server = http.createServer(app);
 
 // Auto-generation disabled: Moderators now manually create rooms.
 
+const allowedOrigins = ['http://localhost:5173', 'https://fftourney.com', 'https://www.fftourney.com'];
+
 const io = new Server(server, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST']
+    origin: allowedOrigins,
+    methods: ['GET', 'POST'],
+    credentials: true
   }
 });
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 app.use(helmet());
 app.use(morgan('dev'));
 
